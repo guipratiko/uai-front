@@ -2,25 +2,77 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1025;
+  --brand-50: #faf7fc;
+  --brand-100: #f3ebf9;
+  --brand-200: #e4cff0;
+  --brand-300: #ddb3f0;
+  --brand-400: #c98ae8;
+  --brand-500: #c06ee2;
+  --brand-600: #a94fd4;
+  --brand-700: #8b3ab8;
+  --brand-800: #6d2d96;
+  --brand-950: #2d1045;
+  --accent-100: #f3ebf9;
+  --accent-400: #d896f0;
+  --accent-500: #c06ee2;
+  --accent-900: #4a1570;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-950: var(--brand-950);
+  --color-accent-100: var(--accent-100);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-900: var(--accent-900);
+  --font-sans: var(--font-plus-jakarta);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+/* Contorno cinza fino + sombra nos textos do menu sobre o banner */
+.menu-text-outline {
+  -webkit-text-stroke: 0.35px #9ca3af;
+  paint-order: stroke fill;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 0 1px rgba(107, 114, 128, 0.9),
+    0.5px 0 0 rgba(156, 163, 175, 0.85),
+    -0.5px 0 0 rgba(156, 163, 175, 0.85),
+    0 0.5px 0 rgba(156, 163, 175, 0.85),
+    0 -0.5px 0 rgba(156, 163, 175, 0.85);
 }
