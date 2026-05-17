@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   },
   description:
     "Compre ingressos para os melhores eventos de Minas Gerais. Checkout seguro, QR Code e experiência profissional.",
+  icons: {
+    icon: "/img/favicon.png",
+    shortcut: "/img/favicon.png",
+    apple: "/img/favicon.png",
+  },
 };
 
 export default function RootLayout({
