@@ -8,16 +8,16 @@ export function EventsGrid() {
 
   if (!isReady) {
     return (
-      <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-80 animate-pulse rounded-2xl bg-slate-200" />
+          <div key={i} className="h-72 animate-pulse rounded-2xl bg-slate-200 sm:h-80" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="mt-12 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mt-12 grid grid-cols-2 items-stretch gap-3 sm:gap-6 lg:grid-cols-4">
       {events.map((event) => (
         <EventCard key={event.id} event={event} />
       ))}
