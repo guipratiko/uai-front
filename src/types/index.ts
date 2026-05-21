@@ -31,6 +31,10 @@ export type Event = {
   coordinates: { lat: number; lng: number };
   tickets: TicketTier[];
   featured?: boolean;
+  /** Null no banco = 10% ao comprador */
+  buyerFeePercent?: number | null;
+  /** Null = 0% — comissão Uai sobre bilheteria (relatório) */
+  platformFeePercent?: number | null;
 };
 
 export type CartItem = {
@@ -42,6 +46,8 @@ export type CartItem = {
   ticketName: string;
   unitPrice: number;
   quantity: number;
+  /** % taxa comprador do evento (10 se null) */
+  buyerFeePercent?: number | null;
 };
 
 export type BuyerInfo = {
@@ -60,6 +66,7 @@ export type Order = {
   paymentMethod: PaymentMethod;
   subtotal: number;
   serviceFee: number;
+  platformFee?: number;
   total: number;
   createdAt: string;
   status: "pending" | "confirmed" | "cancelled" | "expired";

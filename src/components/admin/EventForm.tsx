@@ -30,6 +30,8 @@ const defaultForm: EventFormData = {
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.0!2d-49.2647!3d-16.6869!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDQxJzEzLjAiUyA0OcKwMTUnMzIuOSJX!5e0!3m2!1spt-BR!2sbr!4v1",
   coordinates: { lat: -16.6869, lng: -49.2647 },
   featured: false,
+  buyerFeePercent: null,
+  platformFeePercent: null,
   tickets: [createEmptyTicket()],
 };
 
@@ -145,6 +147,49 @@ export function EventForm({
             required
           />
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-bold text-slate-900">Taxas e comissões</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Deixe em branco para usar o padrão de 10% na taxa ao comprador.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Input
+            label="Taxa ao comprador (%)"
+            type="number"
+            min={0}
+            max={100}
+            step={0.01}
+            placeholder="10 (padrão)"
+            value={form.buyerFeePercent ?? ""}
+            onChange={(e) =>
+              update(
+                "buyerFeePercent",
+                e.target.value === "" ? null : Number(e.target.value),
+              )
+            }
+          />
+          <Input
+            label="Comissão Uai sobre bilheteria (%)"
+            type="number"
+            min={0}
+            max={100}
+            step={0.01}
+            placeholder="0"
+            value={form.platformFeePercent ?? ""}
+            onChange={(e) =>
+              update(
+                "platformFeePercent",
+                e.target.value === "" ? null : Number(e.target.value),
+              )
+            }
+          />
+        </div>
+        <p className="mt-3 text-xs text-slate-500">
+          A taxa ao comprador entra no checkout Asaas. A comissão sobre bilheteria é só para
+          relatório (não aumenta o preço para o cliente).
+        </p>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

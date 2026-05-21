@@ -8,6 +8,7 @@ import {
   List,
   LogOut,
   ScanLine,
+  BarChart3,
   Ticket,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
@@ -19,6 +20,7 @@ const links = [
   { href: "/admin/eventos", label: "Eventos", icon: List, exact: false },
   { href: "/admin/eventos/novo", label: "Novo evento", icon: CalendarPlus, exact: true },
   { href: "/admin/check-in", label: "Check-in", icon: ScanLine, exact: false },
+  { href: "/admin/produtores", label: "Produtores", icon: BarChart3, exact: false },
 ];
 
 export function AdminSidebar() {

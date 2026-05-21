@@ -29,6 +29,7 @@ export function TicketSelector({ event }: { event: Event }) {
             ticketId: ticket.id,
             ticketName: ticket.name,
             unitPrice: ticket.price,
+            buyerFeePercent: event.buyerFeePercent,
           },
           qty,
         );

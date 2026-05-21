@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 export function OrderSummary({ showCheckoutButton = true }: { showCheckoutButton?: boolean }) {
-  const { subtotal, serviceFee, total, itemCount } = useCart();
+  const { subtotal, serviceFee, serviceFeeLabel, total, itemCount } = useCart();
 
   return (
     <aside className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-24">
@@ -17,7 +17,7 @@ export function OrderSummary({ showCheckoutButton = true }: { showCheckoutButton
           <dd className="font-medium">{formatCurrency(subtotal)}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-slate-600">Taxa de serviço (10%)</dt>
+          <dt className="text-slate-600">{serviceFeeLabel}</dt>
           <dd className="font-medium">{formatCurrency(serviceFee)}</dd>
         </div>
         <div className="flex justify-between border-t border-slate-200 pt-3 text-base">

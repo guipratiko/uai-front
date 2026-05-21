@@ -15,7 +15,7 @@ import { reconcileCartItems } from "@/lib/reconcile-cart";
 import { useAuth } from "@/context/AuthContext";
 import { useEvents } from "@/context/EventsContext";
 
-const SERVICE_FEE_RATE = 0.1;
+const DEFAULT_BUYER_FEE_PERCENT = 10;
 const CART_STORAGE_KEY = "uai-tickets-cart";
 const GUEST_TICKETS_KEY = "uai-tickets-guest";
 const LAST_ORDER_KEY = "uai-tickets-last-order";
@@ -27,6 +27,7 @@ type CartContextValue = {
   itemCount: number;
   subtotal: number;
   serviceFee: number;
+  serviceFeeLabel: string;
   total: number;
   addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
   updateQuantity: (ticketId: string, eventId: string, quantity: number) => void;
@@ -141,10 +142,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
     [items],
   );
-  const serviceFee = useMemo(
-    () => Math.round(subtotal * SERVICE_FEE_RATE * 100) / 100,
-    [subtotal],
-  );
+  const serviceFee = useMemo(() => {
+    const fee = items.reduce((sum, i) => {
+      const pct = i.buyerFeePercent ?? DEFAULT_BUYER_FEE_PERCENT;
+      return sum + i.unitPrice * i.quantity * (pct / 100);
+    }, 0);
+    return Math.round(fee * 100) / 100;
+  }, [items]);
+
+  const serviceFeeLabel = useMemo(() => {
+    if (items.length === 0) return "Taxa de serviço";
+    const rates = new Set(items.map((i) => i.buyerFeePercent ?? DEFAULT_BUYER_FEE_PERCENT));
+    if (rates.size === 1) return `Taxa de serviço (${[...rates][0]}%)`;
+    return "Taxa de serviço";
+  }, [items]);
   const total = subtotal + serviceFee;
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -214,6 +225,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemCount,
       subtotal,
       serviceFee,
+      serviceFeeLabel,
       total,
       addItem,
       updateQuantity,
@@ -232,6 +244,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemCount,
       subtotal,
       serviceFee,
+      serviceFeeLabel,
       total,
       addItem,
       updateQuantity,

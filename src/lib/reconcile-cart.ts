@@ -24,6 +24,7 @@ export function reconcileCartItems(items: CartItem[], events: Event[]): CartItem
       ticketId: ticket.id,
       ticketName: ticket.name,
       unitPrice: ticket.price,
+      buyerFeePercent: event.buyerFeePercent,
     });
   }
 
