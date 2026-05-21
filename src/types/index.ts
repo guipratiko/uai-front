@@ -8,6 +8,8 @@ export type TicketTier = {
   available: number;
   maxPerOrder: number;
   benefits?: string[];
+  /** Mesmo texto em vários tipos = virada de lote. Vazio = vende em paralelo. */
+  lotChainId?: string | null;
   sortOrder?: number;
   status?: TicketTierStatus;
   activateAt?: string | null;

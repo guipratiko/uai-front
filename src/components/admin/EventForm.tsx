@@ -245,6 +245,11 @@ export function EventForm({
             Adicionar
           </Button>
         </div>
+        <p className="mt-2 text-xs text-slate-500">
+          <strong>Sem cadeia de lote</strong> (campo vazio): tipos vendidos juntos, ex. VIP e Pista.
+          Use o <strong>mesmo nome de cadeia</strong> em vários ingressos para virada 1º→2º lote (ex.{" "}
+          <code className="rounded bg-slate-100 px-1">pista</code> no 1º e 2º lote).
+        </p>
         <div className="mt-4 space-y-4">
           {form.tickets.map((ticket, i) => (
             <div key={ticket.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
@@ -297,6 +302,18 @@ export function EventForm({
                     label="Descrição"
                     value={ticket.description}
                     onChange={(e) => updateTicket(i, { description: e.target.value })}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Input
+                    label="Cadeia de lote (opcional)"
+                    placeholder="Vazio = paralelo (VIP, Pista)"
+                    value={ticket.lotChainId ?? ""}
+                    onChange={(e) =>
+                      updateTicket(i, {
+                        lotChainId: e.target.value.trim() || null,
+                      })
+                    }
                   />
                 </div>
               </div>
