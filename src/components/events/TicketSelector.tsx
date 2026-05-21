@@ -18,6 +18,7 @@ export function TicketSelector({ event }: { event: Event }) {
   const handleAddToCart = () => {
     let count = 0;
     for (const ticket of event.tickets) {
+      if (ticket.status && ticket.status !== "active") continue;
       const qty = quantities[ticket.id] ?? 0;
       if (qty > 0) {
         addItem(
@@ -54,10 +55,19 @@ export function TicketSelector({ event }: { event: Event }) {
       <p className="mt-1 text-sm text-slate-500">{formatShortDate(event.date)} · {event.time}</p>
 
       <div className="mt-6 space-y-4">
-        {event.tickets.map((ticket) => (
+        {event.tickets.map((ticket) => {
+          const isActive = ticket.status === "active" || ticket.status == null;
+          const isClosed = ticket.status === "closed";
+          if (isClosed) return null;
+
+          return (
           <div
             key={ticket.id}
-            className="rounded-xl border border-brand-100 bg-brand-50/80 p-4"
+            className={`rounded-xl border p-4 ${
+              isActive
+                ? "border-brand-100 bg-brand-50/80"
+                : "border-slate-200 bg-slate-50 opacity-75"
+            }`}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -76,14 +86,20 @@ export function TicketSelector({ event }: { event: Event }) {
                 <p className="mt-2 text-lg font-bold text-brand-700">
                   {formatCurrency(ticket.price)}
                 </p>
+                {!isActive && (
+                  <p className="mt-2 text-xs font-medium text-amber-700">
+                    Lote ainda não está à venda
+                  </p>
+                )}
               </div>
               <QuantitySelector
-                value={quantities[ticket.id] ?? 0}
+                value={isActive ? (quantities[ticket.id] ?? 0) : 0}
                 min={0}
-                max={ticket.maxPerOrder}
-                onChange={(v) =>
-                  setQuantities((prev) => ({ ...prev, [ticket.id]: v }))
-                }
+                max={isActive ? ticket.maxPerOrder : 0}
+                onChange={(v) => {
+                  if (!isActive) return;
+                  setQuantities((prev) => ({ ...prev, [ticket.id]: v }));
+                }}
                 size="sm"
               />
             </div>
@@ -91,7 +107,8 @@ export function TicketSelector({ event }: { event: Event }) {
               {ticket.available.toLocaleString("pt-BR")} disponíveis
             </p>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {totalSelected > 0 && (

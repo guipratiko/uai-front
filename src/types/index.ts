@@ -1,3 +1,5 @@
+export type TicketTierStatus = "scheduled" | "active" | "closed";
+
 export type TicketTier = {
   id: string;
   name: string;
@@ -6,6 +8,12 @@ export type TicketTier = {
   available: number;
   maxPerOrder: number;
   benefits?: string[];
+  sortOrder?: number;
+  status?: TicketTierStatus;
+  activateAt?: string | null;
+  maxSales?: number | null;
+  soldCount?: number;
+  countCourtesyInCap?: boolean;
 };
 
 export type Event = {
