@@ -35,6 +35,8 @@ export type Event = {
   buyerFeePercent?: number | null;
   /** Null = 0% — comissão Uai sobre bilheteria (relatório) */
   platformFeePercent?: number | null;
+  /** false = evento não permite transferência de ingressos */
+  allowTransfer?: boolean;
 };
 
 export type CartItem = {
@@ -102,6 +104,11 @@ export type IssuedTicket = {
   purchasedAt: string;
   status: "approved" | "pending";
   qrValue: string;
+  source?: "sale" | "courtesy";
+  transferCount?: number;
+  transferredAt?: string | null;
+  checkedInAt?: string | null;
+  allowTransfer?: boolean;
 };
 
 export type FAQItem = {

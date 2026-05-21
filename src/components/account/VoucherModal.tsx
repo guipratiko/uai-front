@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { X } from "lucide-react";
 import type { IssuedTicket } from "@/types";
 import { formatDate } from "@/lib/format";
+import { isCourtesyTicket } from "@/lib/tickets";
 import { Button } from "@/components/ui/Button";
 
 export function VoucherModal({
@@ -13,6 +14,8 @@ export function VoucherModal({
   ticket: IssuedTicket;
   onClose: () => void;
 }) {
+  const courtesy = isCourtesyTicket(ticket);
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
@@ -31,9 +34,14 @@ export function VoucherModal({
         </button>
 
         <h2 id="voucher-title" className="pr-8 text-xl font-bold text-slate-900">
-          Meu voucher
+          {courtesy ? "Ingresso cortesia" : "Meu voucher"}
         </h2>
         <p className="mt-1 text-sm text-slate-500">{ticket.eventTitle}</p>
+        {courtesy && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+            Cortesia · Intransferível · Uso exclusivo do titular
+          </p>
+        )}
 
         <div className="mt-6 flex justify-center rounded-xl border border-slate-100 bg-slate-50 p-6">
           <QRCodeSVG value={ticket.qrValue} size={200} level="M" />

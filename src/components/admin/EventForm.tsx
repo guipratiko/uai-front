@@ -32,6 +32,7 @@ const defaultForm: EventFormData = {
   featured: false,
   buyerFeePercent: null,
   platformFeePercent: null,
+  allowTransfer: true,
   tickets: [createEmptyTicket()],
 };
 
@@ -190,6 +191,23 @@ export function EventForm({
           A taxa ao comprador entra no checkout Asaas. A comissão sobre bilheteria é só para
           relatório (não aumenta o preço para o cliente).
         </p>
+        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
+          <input
+            type="checkbox"
+            checked={form.allowTransfer !== false}
+            onChange={(e) => update("allowTransfer", e.target.checked)}
+            className="mt-1 rounded border-slate-300"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-slate-900">
+              Permitir transferência de ingressos
+            </span>
+            <span className="mt-1 block text-xs text-slate-500">
+              Cada ingresso vendido pode ser transferido uma vez, até a validação no check-in.
+              Cortesias nunca são transferíveis.
+            </span>
+          </span>
+        </label>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

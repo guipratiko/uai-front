@@ -27,7 +27,7 @@ export const faqItems: FAQItem[] = [
     category: "Ingressos",
     question: "Posso transferir meu ingresso para outra pessoa?",
     answer:
-      "A transferência de titularidade estará disponível em versões futuras, sujeita às regras do organizador do evento. Consulte os termos específicos de cada evento.",
+      "Sim, quando o evento permite: em Meus ingressos, use Transferir e informe nome e e-mail do novo titular. Cada ingresso pode ser transferido uma vez; o QR Code anterior deixa de valer e o novo titular recebe um e-mail com o ingresso atualizado. Não é possível transferir cortesias, ingressos já validados no check-in ou eventos em que o organizador desativou a transferência.",
   },
   {
     id: "faq-5",

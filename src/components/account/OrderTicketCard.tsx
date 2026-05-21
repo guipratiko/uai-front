@@ -10,7 +10,10 @@ import {
   formatOrderNumber,
   formatPurchaseDateTime,
 } from "@/lib/format";
+import { canTransferTicket, getTransferBlockReason, isCourtesyTicket } from "@/lib/tickets";
+import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/Button";
+import { TransferTicketModal } from "./TransferTicketModal";
 import { VoucherModal } from "./VoucherModal";
 
 export function OrderTicketCard({
@@ -20,9 +23,12 @@ export function OrderTicketCard({
   order: Order;
   tickets: IssuedTicket[];
 }) {
+  const { refreshTickets } = useCart();
   const [voucherTicket, setVoucherTicket] = useState<IssuedTicket | null>(null);
+  const [transferTicket, setTransferTicket] = useState<IssuedTicket | null>(null);
   const first = tickets[0];
   if (!first) return null;
+  const orderIsCourtesy = tickets.every(isCourtesyTicket);
 
   return (
     <>
@@ -57,10 +63,16 @@ export function OrderTicketCard({
               <p className="mt-1 font-mono text-slate-700">
                 {formatOrderNumber(order.id)}
               </p>
-              <p className="mt-2 text-slate-500">Valor total</p>
-              <p className="text-lg font-bold text-slate-900">
-                {formatCurrency(order.total)}
+              <p className="mt-2 text-slate-500">
+                {orderIsCourtesy ? "Tipo" : "Valor total"}
               </p>
+              {orderIsCourtesy ? (
+                <p className="text-lg font-bold text-amber-700">Cortesia</p>
+              ) : (
+                <p className="text-lg font-bold text-slate-900">
+                  {formatCurrency(order.total)}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col items-start gap-3 sm:items-end">
@@ -76,15 +88,43 @@ export function OrderTicketCard({
         </div>
 
         <ul className="divide-y divide-dashed divide-slate-200">
-          {tickets.map((ticket) => (
+          {tickets.map((ticket) => {
+            const courtesy = isCourtesyTicket(ticket);
+            const transferable = canTransferTicket(ticket);
+            const blockReason = getTransferBlockReason(ticket);
+            const wasTransferred = (ticket.transferCount ?? 0) >= 1;
+            return (
             <li
               key={ticket.id}
               className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0 flex-1">
-                <span className="inline-block rounded bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-800">
-                  {ticket.lotLabel}
+                <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${
+                    courtesy
+                      ? "bg-amber-100 text-amber-900"
+                      : "bg-brand-100 text-brand-800"
+                  }`}
+                >
+                  {courtesy ? "Cortesia" : ticket.lotLabel}
                 </span>
+                {courtesy && (
+                  <span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                    Intransferível
+                  </span>
+                )}
+                {wasTransferred && !courtesy && (
+                  <span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                    Já transferido
+                  </span>
+                )}
+                {ticket.checkedInAt && (
+                  <span className="inline-block rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                    Validado
+                  </span>
+                )}
+                </div>
                 <p className="mt-2 truncate text-sm font-semibold text-slate-900">
                   {ticket.ticketName}
                 </p>
@@ -95,37 +135,59 @@ export function OrderTicketCard({
               </div>
 
               <div className="flex flex-wrap items-center gap-6">
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">Preço</p>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {formatCurrency(ticket.unitPrice)}
+                {!courtesy && (
+                  <>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-500">Preço</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {formatCurrency(ticket.unitPrice)}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-500">Taxa</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {formatCurrency(ticket.feeAmount)}
+                      </p>
+                    </div>
+                    {transferable ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() => setTransferTicket(ticket)}
+                      >
+                        <ArrowLeftRight className="h-4 w-4" />
+                        Transferir
+                      </Button>
+                    ) : blockReason ? (
+                      <p className="max-w-[220px] text-center text-xs text-slate-500">
+                        {blockReason}
+                      </p>
+                    ) : null}
+                  </>
+                )}
+                {courtesy && (
+                  <p className="max-w-[200px] text-center text-xs font-medium text-amber-800">
+                    Uso pessoal · Não pode ser transferido
                   </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">Taxa</p>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {formatCurrency(ticket.feeAmount)}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() =>
-                    alert("Transferência simulada — disponível em breve.")
-                  }
-                >
-                  <ArrowLeftRight className="h-4 w-4" />
-                  Transferir
-                </Button>
+                )}
               </div>
             </li>
-          ))}
+          );
+          })}
         </ul>
       </article>
 
       {voucherTicket && (
         <VoucherModal ticket={voucherTicket} onClose={() => setVoucherTicket(null)} />
+      )}
+
+      {transferTicket && (
+        <TransferTicketModal
+          ticket={transferTicket}
+          onClose={() => setTransferTicket(null)}
+          onSuccess={() => refreshTickets()}
+        />
       )}
     </>
   );
