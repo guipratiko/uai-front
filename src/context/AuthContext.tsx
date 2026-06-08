@@ -23,6 +23,9 @@ type AuthContextValue = {
     fullName: string;
     cpf?: string;
     phone?: string;
+    gender?: User["gender"];
+    city: string;
+    state: string;
   }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -42,6 +45,9 @@ function toUser(u: ApiUser): User {
     email: u.email,
     cpf: u.cpf,
     phone: u.phone,
+    gender: u.gender ?? "unspecified",
+    city: u.city ?? "",
+    state: u.state ?? "",
     avatarUrl: u.avatarUrl ?? null,
   };
 }
@@ -111,6 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fullName: string;
       cpf?: string;
       phone?: string;
+      gender?: User["gender"];
+      city: string;
+      state: string;
     }) => {
       try {
         const data = await api<{ token: string; user: ApiUser }>("/auth/register", {
@@ -145,6 +154,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fullName: data.fullName,
           cpf: data.cpf,
           phone: data.phone,
+          gender: data.gender,
+          city: data.city,
+          state: data.state,
         }),
       });
       setUser(toUser(result.user));

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { formatCpf, isValidCpf, onlyDigits } from "@/lib/cpf";
+import { BRAZIL_STATES, GENDER_OPTIONS, type UserGender } from "@/lib/brazil-states";
 
 function RegisterForm() {
   const router = useRouter();
@@ -21,6 +22,9 @@ function RegisterForm() {
     email: "",
     cpf: "",
     phone: "",
+    gender: "unspecified" as UserGender,
+    city: "",
+    state: "",
     password: "",
     confirmPassword: "",
   });
@@ -44,6 +48,8 @@ function RegisterForm() {
     if (form.phone && form.phone.replace(/\D/g, "").length < 10) {
       next.phone = "Telefone inválido";
     }
+    if (!form.city.trim()) next.city = "Informe sua cidade";
+    if (!form.state) next.state = "Selecione o estado";
     if (form.password.length < 4) next.password = "A senha deve ter pelo menos 4 caracteres";
     if (form.password !== form.confirmPassword) {
       next.confirmPassword = "As senhas não coincidem";
@@ -69,6 +75,9 @@ function RegisterForm() {
       password: form.password,
       cpf: onlyDigits(form.cpf),
       phone: form.phone,
+      gender: form.gender,
+      city: form.city.trim(),
+      state: form.state,
     });
     setLoading(false);
 
@@ -149,6 +158,65 @@ function RegisterForm() {
             hint="Opcional"
             error={fieldErrors.phone}
           />
+          <div className="space-y-1.5">
+            <label htmlFor="gender" className="block text-sm font-medium text-slate-700">
+              Gênero
+            </label>
+            <select
+              id="gender"
+              name="gender"
+              value={form.gender}
+              onChange={(e) =>
+                setForm({ ...form, gender: e.target.value as UserGender })
+              }
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            >
+              {GENDER_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Input
+            label="Cidade"
+            name="city"
+            autoComplete="address-level2"
+            value={form.city}
+            onChange={(e) => {
+              setForm({ ...form, city: e.target.value });
+              if (fieldErrors.city) setFieldErrors((p) => ({ ...p, city: undefined }));
+            }}
+            placeholder="Sua cidade"
+            error={fieldErrors.city}
+          />
+          <div className="space-y-1.5">
+            <label htmlFor="state" className="block text-sm font-medium text-slate-700">
+              Estado
+            </label>
+            <select
+              id="state"
+              name="state"
+              value={form.state}
+              onChange={(e) => {
+                setForm({ ...form, state: e.target.value });
+                if (fieldErrors.state) setFieldErrors((p) => ({ ...p, state: undefined }));
+              }}
+              className={`w-full rounded-xl border bg-white px-4 py-3 text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
+                fieldErrors.state ? "border-red-400" : "border-slate-200"
+              }`}
+            >
+              <option value="">Selecione a UF</option>
+              {BRAZIL_STATES.map((s) => (
+                <option key={s.uf} value={s.uf}>
+                  {s.uf} — {s.name}
+                </option>
+              ))}
+            </select>
+            {fieldErrors.state && (
+              <p className="text-xs text-red-600">{fieldErrors.state}</p>
+            )}
+          </div>
           <Input
             label="Senha"
             name="password"

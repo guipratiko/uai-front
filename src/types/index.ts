@@ -85,11 +85,16 @@ export type Order = {
   paidAt?: string | null;
 };
 
+export type UserGender = "male" | "female" | "unspecified";
+
 export type User = {
   fullName: string;
   email: string;
   cpf: string;
   phone: string;
+  gender: UserGender;
+  city: string;
+  state: string;
   avatarUrl?: string | null;
 };
 
