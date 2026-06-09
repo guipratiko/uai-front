@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { api, apiFormData, setUserToken, getUserToken } from "@/lib/api";
+import { resolveAssetUrl } from "@/lib/api-base";
 import type { BuyerInfo, User } from "@/types";
 
 type AuthContextValue = {
@@ -48,7 +49,7 @@ function toUser(u: ApiUser): User {
     gender: u.gender ?? "unspecified",
     city: u.city ?? "",
     state: u.state ?? "",
-    avatarUrl: u.avatarUrl ?? null,
+    avatarUrl: resolveAssetUrl(u.avatarUrl),
   };
 }
 
