@@ -79,6 +79,9 @@ export type Order = {
   subtotal: number;
   serviceFee: number;
   platformFee?: number;
+  discountAmount?: number;
+  discountPercent?: number | null;
+  couponCode?: string | null;
   total: number;
   createdAt: string;
   status: "pending" | "confirmed" | "cancelled" | "expired";

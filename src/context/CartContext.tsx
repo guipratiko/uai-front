@@ -17,18 +17,34 @@ import { useEvents } from "@/context/EventsContext";
 
 const DEFAULT_BUYER_FEE_PERCENT = 10;
 const CART_STORAGE_KEY = "uai-tickets-cart";
+const COUPON_STORAGE_KEY = "uai-tickets-coupon";
 const GUEST_TICKETS_KEY = "uai-tickets-guest";
 const LAST_ORDER_KEY = "uai-tickets-last-order";
 
+export type AppliedCoupon = {
+  code: string;
+  discountPercent: number;
+  discountAmount: number;
+  serviceFee: number;
+  total: number;
+  ticketTierNames: string[];
+};
+
 type CartContextValue = {
-  /** true após ler sessionStorage no cliente (evita flash/redirect indevido no SSR) */
   cartReady: boolean;
   items: CartItem[];
   itemCount: number;
   subtotal: number;
   serviceFee: number;
   serviceFeeLabel: string;
+  discountAmount: number;
   total: number;
+  coupon: AppliedCoupon | null;
+  couponError: string | null;
+  couponLoading: boolean;
+  singleEventCart: boolean;
+  applyCoupon: (code: string, buyer?: Partial<BuyerInfo>) => Promise<boolean>;
+  removeCoupon: () => void;
   addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
   updateQuantity: (ticketId: string, eventId: string, quantity: number) => void;
   removeItem: (ticketId: string, eventId: string) => void;
@@ -56,6 +72,11 @@ function loadCart(): CartItem[] {
   }
 }
 
+function loadCouponCode(): string {
+  if (typeof window === "undefined") return "";
+  return sessionStorage.getItem(COUPON_STORAGE_KEY) ?? "";
+}
+
 function loadLastOrder(): Order | null {
   if (typeof window === "undefined") return null;
   try {
@@ -67,17 +88,22 @@ function loadLastOrder(): Order | null {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { events, isReady: eventsReady } = useEvents();
   const [items, setItems] = useState<CartItem[]>([]);
   const [lastOrder, setLastOrderState] = useState<Order | null>(null);
   const [issuedTickets, setIssuedTickets] = useState<IssuedTicket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   useEffect(() => {
     setItems(loadCart());
     setLastOrderState(loadLastOrder());
+    setCouponCode(loadCouponCode());
     setStorageReady(true);
   }, []);
 
@@ -106,6 +132,114 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!storageReady) return;
     sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items, storageReady]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    if (couponCode) sessionStorage.setItem(COUPON_STORAGE_KEY, couponCode);
+    else sessionStorage.removeItem(COUPON_STORAGE_KEY);
+  }, [couponCode, storageReady]);
+
+  const singleEventCart = useMemo(() => {
+    const ids = new Set(items.map((i) => i.eventId));
+    return ids.size <= 1;
+  }, [items]);
+
+  const revalidateCoupon = useCallback(
+    async (code: string, buyer?: Partial<BuyerInfo>) => {
+      if (!code.trim() || items.length === 0) {
+        setCoupon(null);
+        return;
+      }
+      if (!singleEventCart) {
+        setCoupon(null);
+        setCouponError("Cupom válido apenas com ingressos de um único evento no carrinho");
+        return;
+      }
+      setCouponLoading(true);
+      setCouponError(null);
+      try {
+        const result = await api<AppliedCoupon & { valid: true }>("/checkout/coupons/validate", {
+          method: "POST",
+          body: JSON.stringify({
+            code,
+            items,
+            buyerEmail: buyer?.email ?? user?.email,
+            buyerCpf: buyer?.cpf ?? user?.cpf,
+          }),
+        });
+        setCoupon({
+          code: result.code,
+          discountPercent: result.discountPercent,
+          discountAmount: result.discountAmount,
+          serviceFee: result.serviceFee,
+          total: result.total,
+          ticketTierNames: result.ticketTierNames,
+        });
+        setCouponCode(result.code);
+      } catch (err) {
+        setCoupon(null);
+        setCouponError(err instanceof Error ? err.message : "Cupom inválido");
+      } finally {
+        setCouponLoading(false);
+      }
+    },
+    [items, singleEventCart, user?.cpf, user?.email],
+  );
+
+  useEffect(() => {
+    if (!storageReady || !couponCode) return;
+    void revalidateCoupon(couponCode);
+  }, [items, storageReady]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const applyCoupon = useCallback(
+    async (code: string, buyer?: Partial<BuyerInfo>) => {
+      if (!code.trim() || items.length === 0) {
+        setCouponError("Informe um cupom");
+        return false;
+      }
+      if (!singleEventCart) {
+        setCouponError("Cupom válido apenas com ingressos de um único evento no carrinho");
+        return false;
+      }
+      setCouponLoading(true);
+      setCouponError(null);
+      try {
+        const result = await api<AppliedCoupon & { valid: true }>("/checkout/coupons/validate", {
+          method: "POST",
+          body: JSON.stringify({
+            code,
+            items,
+            buyerEmail: buyer?.email ?? user?.email,
+            buyerCpf: buyer?.cpf ?? user?.cpf,
+          }),
+        });
+        setCoupon({
+          code: result.code,
+          discountPercent: result.discountPercent,
+          discountAmount: result.discountAmount,
+          serviceFee: result.serviceFee,
+          total: result.total,
+          ticketTierNames: result.ticketTierNames,
+        });
+        setCouponCode(result.code);
+        return true;
+      } catch (err) {
+        setCoupon(null);
+        setCouponError(err instanceof Error ? err.message : "Cupom inválido");
+        return false;
+      } finally {
+        setCouponLoading(false);
+      }
+    },
+    [items, singleEventCart, user?.cpf, user?.email],
+  );
+
+  const removeCoupon = useCallback(() => {
+    setCoupon(null);
+    setCouponCode("");
+    setCouponError(null);
+    sessionStorage.removeItem(COUPON_STORAGE_KEY);
+  }, []);
 
   const loadGuestTickets = useCallback((): IssuedTicket[] => {
     if (typeof window === "undefined") return [];
@@ -142,13 +276,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
     [items],
   );
+
   const serviceFee = useMemo(() => {
+    if (coupon) return coupon.serviceFee;
     const fee = items.reduce((sum, i) => {
       const pct = i.buyerFeePercent ?? DEFAULT_BUYER_FEE_PERCENT;
       return sum + i.unitPrice * i.quantity * (pct / 100);
     }, 0);
     return Math.round(fee * 100) / 100;
-  }, [items]);
+  }, [items, coupon]);
+
+  const discountAmount = coupon?.discountAmount ?? 0;
 
   const serviceFeeLabel = useMemo(() => {
     if (items.length === 0) return "Taxa de serviço";
@@ -156,7 +294,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (rates.size === 1) return `Taxa de serviço (${[...rates][0]}%)`;
     return "Taxa de serviço";
   }, [items]);
-  const total = subtotal + serviceFee;
+
+  const total = coupon ? coupon.total : subtotal + serviceFee;
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
   const addItem = useCallback(
@@ -201,7 +340,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    removeCoupon();
+  }, [removeCoupon]);
 
   const startCheckout = useCallback(
     async (buyer: BuyerInfo, paymentMethod: PaymentMethod) => {
@@ -209,13 +351,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
         "/checkout/session",
         {
           method: "POST",
-          body: JSON.stringify({ items, buyer, paymentMethod }),
+          body: JSON.stringify({
+            items,
+            buyer,
+            paymentMethod,
+            couponCode: coupon?.code ?? undefined,
+          }),
           token: getUserToken(),
         },
       );
       return result;
     },
-    [items],
+    [items, coupon?.code],
   );
 
   const value = useMemo(
@@ -226,7 +373,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal,
       serviceFee,
       serviceFeeLabel,
+      discountAmount,
       total,
+      coupon,
+      couponError,
+      couponLoading,
+      singleEventCart,
+      applyCoupon,
+      removeCoupon,
       addItem,
       updateQuantity,
       removeItem,
@@ -245,7 +399,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal,
       serviceFee,
       serviceFeeLabel,
+      discountAmount,
       total,
+      coupon,
+      couponError,
+      couponLoading,
+      singleEventCart,
+      applyCoupon,
+      removeCoupon,
       addItem,
       updateQuantity,
       removeItem,
