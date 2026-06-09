@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { TicketSelector } from "@/components/events/TicketSelector";
 import { EventLocation } from "@/components/events/EventLocation";
 import { useEvents } from "@/context/EventsContext";
+import { CommissionerRefCapture } from "@/components/events/CommissionerRefCapture";
 
 export default function EventPage() {
   const params = useParams();
@@ -36,6 +37,7 @@ export default function EventPage() {
 
   return (
     <PageShell className="bg-brand-50">
+      <CommissionerRefCapture eventId={event.id} />
       <div className="relative h-64 sm:h-80 lg:h-96">
         <Image
           src={event.bannerImage}

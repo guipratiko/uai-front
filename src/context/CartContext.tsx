@@ -12,6 +12,10 @@ import {
 import type { BuyerInfo, CartItem, IssuedTicket, Order, PaymentMethod } from "@/types";
 import { api, getUserToken } from "@/lib/api";
 import { reconcileCartItems } from "@/lib/reconcile-cart";
+import {
+  clearCommissionerRef,
+  getCommissionerCodeForEvent,
+} from "@/lib/commissioner-ref";
 import { useAuth } from "@/context/AuthContext";
 import { useEvents } from "@/context/EventsContext";
 
@@ -343,10 +347,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([]);
     removeCoupon();
+    clearCommissionerRef();
   }, [removeCoupon]);
 
   const startCheckout = useCallback(
     async (buyer: BuyerInfo, paymentMethod: PaymentMethod) => {
+      const eventId = items[0]?.eventId;
+      const commissionerCode = eventId ? getCommissionerCodeForEvent(eventId) : undefined;
       const result = await api<{ orderId: string; checkoutUrl: string }>(
         "/checkout/session",
         {
@@ -356,10 +363,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
             buyer,
             paymentMethod,
             couponCode: coupon?.code ?? undefined,
+            commissionerCode,
           }),
           token: getUserToken(),
         },
       );
+      clearCommissionerRef();
       return result;
     },
     [items, coupon?.code],
