@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/admin", label: "Métricas", icon: LayoutDashboard, exact: true },
+  { href: "/admin/comparecimento", label: "Comparecimento", icon: BarChart3, exact: false },
   { href: "/admin/eventos", label: "Eventos", icon: List, exact: false },
   { href: "/admin/eventos/novo", label: "Novo evento", icon: CalendarPlus, exact: true },
   { href: "/admin/hero", label: "Banners home", icon: ImageIcon, exact: false },

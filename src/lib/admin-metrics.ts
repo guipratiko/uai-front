@@ -7,7 +7,8 @@ export type AdminMetrics = {
   ordersCount: number;
   eventsActive: number;
   revenueByEvent: { name: string; revenue: number; tickets: number }[];
-  salesByDay: { label: string; count: number; revenue: number }[];
+  salesByDay: { label: string; tickets: number; revenue: number }[];
+  salesByMonth: { label: string; tickets: number; revenue: number }[];
   paymentSplit: { method: string; count: number }[];
 };
 
@@ -58,10 +59,11 @@ export function computeMetrics(
     }
   }
   const salesByDay = Array.from(dayMap.entries()).map(([iso, data]) => ({
+    key: iso,
     label: new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit" })
       .format(new Date(iso))
       .replace(".", ""),
-    count: data.count,
+    tickets: data.count,
     revenue: data.revenue,
   }));
 
@@ -72,6 +74,7 @@ export function computeMetrics(
     eventsActive: events.length,
     revenueByEvent,
     salesByDay,
+    salesByMonth: [],
     paymentSplit: [
       { method: PAYMENT_LABELS.pix, count: Math.ceil(tickets.length * 0.62) },
       {

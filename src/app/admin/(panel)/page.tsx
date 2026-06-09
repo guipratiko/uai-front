@@ -21,13 +21,14 @@ export default function AdminDashboardPage() {
   }
 
   const maxRevenue = Math.max(...metrics.revenueByEvent.map((e) => e.revenue), 1);
-  const maxDay = Math.max(...metrics.salesByDay.map((d) => d.count), 1);
+  const maxDay = Math.max(...metrics.salesByDay.map((d) => d.tickets), 1);
+  const maxMonth = Math.max(...(metrics.salesByMonth ?? []).map((m) => m.tickets), 1);
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-900">Métricas</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Dados em tempo real das vendas na plataforma
+        Vendas confirmadas por data de pagamento (paidAt)
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -86,24 +87,51 @@ export default function AdminDashboardPage() {
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="font-bold text-slate-900">Últimos 7 dias</h2>
-          <div className="mt-6 flex h-48 items-end justify-between gap-2">
+          <h2 className="font-bold text-slate-900">Vendas por dia</h2>
+          <p className="mt-1 text-xs text-slate-500">Últimos 30 dias</p>
+          <div className="mt-6 flex h-48 items-end gap-0.5 overflow-x-auto">
             {metrics.salesByDay.map((day) => (
-              <div key={day.label} className="flex flex-1 flex-col items-center gap-2">
+              <div
+                key={day.label}
+                className="flex min-w-[16px] flex-1 flex-col items-center gap-1"
+                title={`${day.label}: ${day.tickets} ingressos · ${formatMetricCurrency(day.revenue)}`}
+              >
                 <div
                   className="w-full rounded-t-md bg-brand-400"
                   style={{
-                    height: `${Math.max(8, (day.count / maxDay) * 100)}%`,
-                    minHeight: day.count > 0 ? "12px" : "4px",
+                    height: `${Math.max(6, (day.tickets / maxDay) * 100)}%`,
+                    minHeight: day.tickets > 0 ? "10px" : "2px",
                   }}
-                  title={`${day.count} ingressos`}
                 />
-                <span className="text-[10px] uppercase text-slate-500">{day.label}</span>
+                <span className="max-w-full truncate text-[8px] text-slate-500">{day.label}</span>
               </div>
             ))}
           </div>
         </section>
       </div>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="font-bold text-slate-900">Vendas por mês</h2>
+        <p className="mt-1 text-xs text-slate-500">Últimos 12 meses</p>
+        <div className="mt-6 flex h-48 items-end gap-2 overflow-x-auto">
+          {(metrics.salesByMonth ?? []).map((month) => (
+            <div
+              key={month.label}
+              className="flex min-w-[36px] flex-1 flex-col items-center gap-1"
+              title={`${month.label}: ${month.tickets} ingressos · ${formatMetricCurrency(month.revenue)}`}
+            >
+              <div
+                className="w-full rounded-t-md bg-violet-500"
+                style={{
+                  height: `${Math.max(6, (month.tickets / maxMonth) * 100)}%`,
+                  minHeight: month.tickets > 0 ? "10px" : "2px",
+                }}
+              />
+              <span className="text-[9px] text-slate-500">{month.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="font-bold text-slate-900">Formas de pagamento</h2>
