@@ -13,11 +13,16 @@ export function OrderSummary({ showCheckoutButton = true }: { showCheckoutButton
     serviceFee,
     serviceFeeLabel,
     discountAmount,
+    discountLabel,
     total,
     itemCount,
     coupon,
     couponError,
     couponLoading,
+    commissionerDiscount,
+    commissionerError,
+    commissionerLoading,
+    hasCommissionerRef,
     singleEventCart,
     applyCoupon,
     removeCoupon,
@@ -37,10 +42,31 @@ export function OrderSummary({ showCheckoutButton = true }: { showCheckoutButton
         <div className="mt-4 space-y-2">
           {!singleEventCart && (
             <p className="text-xs text-amber-700">
-              Cupom disponível apenas com ingressos de um evento por vez.
+              Cupom e link de comissário válidos apenas com ingressos de um evento por vez.
             </p>
           )}
-          {singleEventCart && (
+          {singleEventCart && commissionerDiscount && (
+            <div className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm">
+              <p className="font-semibold text-violet-900">
+                Link de {commissionerDiscount.commissionerName}
+              </p>
+              {commissionerDiscount.trackingOnly ? (
+                <p className="text-xs text-violet-700">Venda atribuída ao comissário</p>
+              ) : (
+                <p className="text-xs text-violet-700">
+                  Desconto comissário {commissionerDiscount.discountPercent}% em{" "}
+                  {commissionerDiscount.ticketTierNames.join(", ")}
+                </p>
+              )}
+            </div>
+          )}
+          {commissionerError && (
+            <p className="text-xs text-red-600">{commissionerError}</p>
+          )}
+          {commissionerLoading && (
+            <p className="text-xs text-slate-500">Validando link do comissário...</p>
+          )}
+          {singleEventCart && !hasCommissionerRef && (
             <>
               {coupon ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
@@ -85,6 +111,11 @@ export function OrderSummary({ showCheckoutButton = true }: { showCheckoutButton
               {couponError && <p className="text-xs text-red-600">{couponError}</p>}
             </>
           )}
+          {hasCommissionerRef && !commissionerLoading && (
+            <p className="text-xs text-slate-500">
+              Cupom não pode ser combinado com link de comissário.
+            </p>
+          )}
         </div>
       )}
 
@@ -93,9 +124,9 @@ export function OrderSummary({ showCheckoutButton = true }: { showCheckoutButton
           <dt className="text-slate-600">Subtotal ({itemCount} itens)</dt>
           <dd className="font-medium">{formatCurrency(subtotal)}</dd>
         </div>
-        {discountAmount > 0 && (
+        {discountAmount > 0 && discountLabel && (
           <div className="flex justify-between text-emerald-700">
-            <dt>Desconto (cupom)</dt>
+            <dt>{discountLabel}</dt>
             <dd className="font-medium">−{formatCurrency(discountAmount)}</dd>
           </div>
         )}

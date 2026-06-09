@@ -34,6 +34,17 @@ export type AppliedCoupon = {
   ticketTierNames: string[];
 };
 
+export type AppliedCommissionerDiscount = {
+  code: string;
+  commissionerName: string;
+  discountPercent: number;
+  discountAmount: number;
+  serviceFee: number;
+  total: number;
+  ticketTierNames: string[];
+  trackingOnly: boolean;
+};
+
 type CartContextValue = {
   cartReady: boolean;
   items: CartItem[];
@@ -42,10 +53,15 @@ type CartContextValue = {
   serviceFee: number;
   serviceFeeLabel: string;
   discountAmount: number;
+  discountLabel: string | null;
   total: number;
   coupon: AppliedCoupon | null;
   couponError: string | null;
   couponLoading: boolean;
+  commissionerDiscount: AppliedCommissionerDiscount | null;
+  commissionerError: string | null;
+  commissionerLoading: boolean;
+  hasCommissionerRef: boolean;
   singleEventCart: boolean;
   applyCoupon: (code: string, buyer?: Partial<BuyerInfo>) => Promise<boolean>;
   removeCoupon: () => void;
@@ -103,6 +119,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [commissionerDiscount, setCommissionerDiscount] =
+    useState<AppliedCommissionerDiscount | null>(null);
+  const [commissionerError, setCommissionerError] = useState<string | null>(null);
+  const [commissionerLoading, setCommissionerLoading] = useState(false);
 
   useEffect(() => {
     setItems(loadCart());
@@ -148,6 +168,68 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return ids.size <= 1;
   }, [items]);
 
+  const commissionerCode = useMemo(() => {
+    const eventId = items[0]?.eventId;
+    return eventId ? getCommissionerCodeForEvent(eventId) : undefined;
+  }, [items]);
+
+  const hasCommissionerRef = Boolean(commissionerCode);
+
+  const revalidateCommissioner = useCallback(async () => {
+    if (!commissionerCode || items.length === 0) {
+      setCommissionerDiscount(null);
+      setCommissionerError(null);
+      return;
+    }
+    if (!singleEventCart) {
+      setCommissionerDiscount(null);
+      setCommissionerError("Link de comissário válido apenas com um evento no carrinho");
+      return;
+    }
+    setCommissionerLoading(true);
+    setCommissionerError(null);
+    try {
+      const result = await api<AppliedCommissionerDiscount & { valid: true }>(
+        "/checkout/commissioners/validate",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            code: commissionerCode,
+            items,
+            buyerEmail: user?.email,
+            buyerCpf: user?.cpf,
+          }),
+        },
+      );
+      setCommissionerDiscount({
+        code: result.code,
+        commissionerName: result.commissionerName,
+        discountPercent: result.discountPercent,
+        discountAmount: result.discountAmount,
+        serviceFee: result.serviceFee,
+        total: result.total,
+        ticketTierNames: result.ticketTierNames,
+        trackingOnly: result.trackingOnly,
+      });
+      setCoupon(null);
+      setCouponCode("");
+      setCouponError(null);
+      sessionStorage.removeItem(COUPON_STORAGE_KEY);
+    } catch (err) {
+      setCommissionerDiscount(null);
+      setCommissionerError(
+        err instanceof Error ? err.message : "Link de comissário inválido",
+      );
+    } finally {
+      setCommissionerLoading(false);
+    }
+  }, [commissionerCode, items, singleEventCart, user?.cpf, user?.email]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    void revalidateCommissioner();
+  }, [items, storageReady, commissionerCode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const revalidateCoupon = useCallback(
     async (code: string, buyer?: Partial<BuyerInfo>) => {
       if (!code.trim() || items.length === 0) {
@@ -191,12 +273,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (!storageReady || !couponCode) return;
+    if (!storageReady || !couponCode || hasCommissionerRef) return;
     void revalidateCoupon(couponCode);
-  }, [items, storageReady]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items, storageReady, hasCommissionerRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyCoupon = useCallback(
     async (code: string, buyer?: Partial<BuyerInfo>) => {
+      if (hasCommissionerRef) {
+        setCouponError("Não é possível usar cupom com link de comissário ativo");
+        return false;
+      }
       if (!code.trim() || items.length === 0) {
         setCouponError("Informe um cupom");
         return false;
@@ -235,7 +321,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setCouponLoading(false);
       }
     },
-    [items, singleEventCart, user?.cpf, user?.email],
+    [hasCommissionerRef, items, singleEventCart, user?.cpf, user?.email],
   );
 
   const removeCoupon = useCallback(() => {
@@ -281,16 +367,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items],
   );
 
+  const activePricing = coupon ?? (commissionerDiscount && !commissionerDiscount.trackingOnly
+    ? commissionerDiscount
+    : null);
+
   const serviceFee = useMemo(() => {
-    if (coupon) return coupon.serviceFee;
+    if (activePricing) return activePricing.serviceFee;
     const fee = items.reduce((sum, i) => {
       const pct = i.buyerFeePercent ?? DEFAULT_BUYER_FEE_PERCENT;
       return sum + i.unitPrice * i.quantity * (pct / 100);
     }, 0);
     return Math.round(fee * 100) / 100;
-  }, [items, coupon]);
+  }, [items, activePricing]);
 
-  const discountAmount = coupon?.discountAmount ?? 0;
+  const discountAmount = activePricing?.discountAmount ?? 0;
+
+  const discountLabel = useMemo(() => {
+    if (!activePricing || discountAmount <= 0) return null;
+    if (coupon) return "Desconto (cupom)";
+    if (commissionerDiscount && commissionerDiscount.discountPercent > 0) {
+      return `Desconto comissário (${commissionerDiscount.discountPercent}%)`;
+    }
+    return "Desconto";
+  }, [activePricing, coupon, commissionerDiscount, discountAmount]);
 
   const serviceFeeLabel = useMemo(() => {
     if (items.length === 0) return "Taxa de serviço";
@@ -299,7 +398,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return "Taxa de serviço";
   }, [items]);
 
-  const total = coupon ? coupon.total : subtotal + serviceFee;
+  const total = activePricing ? activePricing.total : subtotal + serviceFee;
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
   const addItem = useCallback(
@@ -347,6 +446,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([]);
     removeCoupon();
+    setCommissionerDiscount(null);
+    setCommissionerError(null);
     clearCommissionerRef();
   }, [removeCoupon]);
 
@@ -362,7 +463,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             items,
             buyer,
             paymentMethod,
-            couponCode: coupon?.code ?? undefined,
+            couponCode: hasCommissionerRef ? undefined : coupon?.code ?? undefined,
             commissionerCode,
           }),
           token: getUserToken(),
@@ -371,7 +472,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCommissionerRef();
       return result;
     },
-    [items, coupon?.code],
+    [items, coupon?.code, hasCommissionerRef],
   );
 
   const value = useMemo(
@@ -383,10 +484,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       serviceFee,
       serviceFeeLabel,
       discountAmount,
+      discountLabel,
       total,
       coupon,
       couponError,
       couponLoading,
+      commissionerDiscount,
+      commissionerError,
+      commissionerLoading,
+      hasCommissionerRef,
       singleEventCart,
       applyCoupon,
       removeCoupon,
@@ -409,10 +515,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       serviceFee,
       serviceFeeLabel,
       discountAmount,
+      discountLabel,
       total,
       coupon,
       couponError,
       couponLoading,
+      commissionerDiscount,
+      commissionerError,
+      commissionerLoading,
+      hasCommissionerRef,
       singleEventCart,
       applyCoupon,
       removeCoupon,
