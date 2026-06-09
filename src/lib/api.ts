@@ -70,12 +70,13 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 export async function apiFormData<T>(
   path: string,
   formData: FormData,
-  options: { admin?: boolean } = {},
+  options: { admin?: boolean; method?: string } = {},
 ): Promise<T> {
   const authToken = options.admin ? getAdminToken() : getUserToken();
+  const method = options.method ?? "POST";
 
   const res = await fetch(`${API_URL}${path}`, {
-    method: "POST",
+    method,
     headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
     body: formData,
   });
@@ -85,5 +86,6 @@ export async function apiFormData<T>(
     throw new ApiError(res.status, body.error ?? "Erro na requisição");
   }
 
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }

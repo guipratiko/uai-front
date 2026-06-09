@@ -1,15 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { HeroVideo } from "@/components/landing/HeroVideo";
 import { Header } from "@/components/layout/Header";
+import { HeroVideo } from "@/components/landing/HeroVideo";
+import { HeroCarousel, useHeroSlides } from "@/components/landing/HeroCarousel";
 
-export function Hero() {
+function HeroFallback() {
   return (
-    <section className="relative min-h-[520px] overflow-hidden bg-black text-white sm:min-h-[600px] lg:min-h-[680px]">
+    <>
       <HeroVideo />
-      <Header embedded />
-
       <div className="relative mx-auto flex min-h-[inherit] max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 sm:pb-28 sm:pt-28 lg:px-8 lg:pb-32 lg:pt-32">
         <div className="max-w-2xl animate-fade-up">
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
@@ -49,6 +50,23 @@ export function Hero() {
           </div>
         </div>
       </div>
+    </>
+  );
+}
+
+export function Hero() {
+  const { slides, loading } = useHeroSlides();
+  const hasSlides = !loading && slides.length > 0;
+
+  return (
+    <section className="relative min-h-[520px] overflow-hidden bg-black text-white sm:min-h-[600px] lg:min-h-[680px]">
+      {hasSlides ? <HeroCarousel slides={slides} /> : !loading ? <HeroFallback /> : null}
+      <Header embedded />
+      {loading && (
+        <div className="absolute inset-0 z-0 bg-black" aria-hidden>
+          <HeroVideo />
+        </div>
+      )}
     </section>
   );
 }

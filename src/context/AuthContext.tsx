@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { api, apiFormData, setUserToken, getUserToken } from "@/lib/api";
-import type { User } from "@/types";
+import type { BuyerInfo, User } from "@/types";
 
 type AuthContextValue = {
   user: User | null;
@@ -31,7 +31,7 @@ type AuthContextValue = {
   updateProfile: (data: Partial<User>) => Promise<void>;
   uploadAvatar: (file: File) => Promise<{ ok: boolean; error?: string }>;
   removeAvatar: () => Promise<{ ok: boolean; error?: string }>;
-  syncUserFromBuyer: (buyer: User) => void;
+  syncUserFromBuyer: (buyer: BuyerInfo) => void;
   refreshUser: () => Promise<void>;
 };
 
@@ -192,8 +192,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const syncUserFromBuyer = useCallback((buyer: User) => {
-    setUser((prev) => ({ ...prev, ...buyer }));
+  const syncUserFromBuyer = useCallback((buyer: BuyerInfo) => {
+    setUser((prev) => (prev ? { ...prev, ...buyer } : null));
   }, []);
 
   const value = useMemo(

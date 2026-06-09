@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarPlus,
+  ImageIcon,
   LayoutDashboard,
   List,
   LogOut,
@@ -19,6 +20,7 @@ const links = [
   { href: "/admin", label: "Métricas", icon: LayoutDashboard, exact: true },
   { href: "/admin/eventos", label: "Eventos", icon: List, exact: false },
   { href: "/admin/eventos/novo", label: "Novo evento", icon: CalendarPlus, exact: true },
+  { href: "/admin/hero", label: "Banners home", icon: ImageIcon, exact: false },
   { href: "/admin/check-in", label: "Check-in", icon: ScanLine, exact: false },
   { href: "/admin/produtores", label: "Produtores", icon: BarChart3, exact: false },
 ];
