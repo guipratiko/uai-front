@@ -31,7 +31,9 @@ function extractUploadPath(url: string): string | null {
 /** Corrige URLs de upload (avatar, hero) vindas da API — inclusive localhost em produção. */
 export function resolveAssetUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  const path = extractUploadPath(url);
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const path = extractUploadPath(trimmed);
   if (!path) return null;
   return `${getApiBase()}${path}`;
 }
