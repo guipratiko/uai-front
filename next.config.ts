@@ -39,6 +39,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "midiaservice.onlyflow.com.br",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "midiaservice.onlyflow.com.br",
+        pathname: "/**",
+      },
       apiImagePattern(),
     ],
   },

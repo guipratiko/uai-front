@@ -9,9 +9,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api } from "@/lib/api";
+import { api, apiFormData } from "@/lib/api";
+import { buildEventFormData, type EventFormData } from "@/lib/event-form";
 import { SEED_EVENTS } from "@/data/events.seed";
-import type { Event, TicketTier } from "@/types";
+import type { Event } from "@/types";
 
 type EventsContextValue = {
   events: Event[];
@@ -20,8 +21,8 @@ type EventsContextValue = {
   refresh: () => Promise<void>;
   getEventBySlug: (slug: string) => Event | undefined;
   getEventById: (id: string) => Event | undefined;
-  addEvent: (event: Omit<Event, "id" | "slug"> & { slug?: string }) => Promise<Event>;
-  updateEvent: (id: string, data: Partial<Event>) => Promise<void>;
+  addEvent: (event: EventFormData) => Promise<Event>;
+  updateEvent: (id: string, data: EventFormData) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
 };
 
@@ -59,25 +60,18 @@ export function EventsProvider({ children }: { children: ReactNode }) {
     [events],
   );
 
-  const addEvent = useCallback(
-    async (input: Omit<Event, "id" | "slug"> & { slug?: string }) => {
-      const { slug: _slug, ...rest } = input;
-      const data = await api<{ event: Event }>("/events", {
-        method: "POST",
-        body: JSON.stringify(rest),
-        admin: true,
-      });
-      setEvents((prev) => [...prev, data.event]);
-      return data.event;
-    },
-    [],
-  );
+  const addEvent = useCallback(async (input: EventFormData) => {
+    const fd = buildEventFormData(input);
+    const data = await apiFormData<{ event: Event }>("/events", fd, { admin: true });
+    setEvents((prev) => [...prev, data.event]);
+    return data.event;
+  }, []);
 
-  const updateEvent = useCallback(async (id: string, data: Partial<Event>) => {
-    const result = await api<{ event: Event }>(`/events/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
+  const updateEvent = useCallback(async (id: string, input: EventFormData) => {
+    const fd = buildEventFormData(input);
+    const result = await apiFormData<{ event: Event }>(`/events/${id}`, fd, {
       admin: true,
+      method: "PUT",
     });
     setEvents((prev) => prev.map((e) => (e.id === id ? result.event : e)));
   }, []);
@@ -121,19 +115,4 @@ export function useEvents() {
   const ctx = useContext(EventsContext);
   if (!ctx) throw new Error("useEvents must be used within EventsProvider");
   return ctx;
-}
-
-function newTicketId() {
-  return `tkt-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-export function createEmptyTicket(): TicketTier {
-  return {
-    id: newTicketId(),
-    name: "Ingresso",
-    description: "",
-    price: 0,
-    available: 100,
-    maxPerOrder: 4,
-  };
 }

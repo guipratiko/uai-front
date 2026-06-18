@@ -20,9 +20,8 @@ export default function EditEventPage() {
   }
 
   const handleSubmit = async (data: EventFormData) => {
-    const { slug, ...rest } = data;
     try {
-      await updateEvent(id, { ...rest, slug });
+      await updateEvent(id, data);
       router.push("/admin/eventos");
     } catch {
       alert("Não foi possível salvar o evento.");
@@ -38,6 +37,7 @@ export default function EditEventPage() {
           initial={eventToForm(event)}
           onSubmit={handleSubmit}
           submitLabel="Salvar alterações"
+          isEdit
         />
       </div>
     </div>

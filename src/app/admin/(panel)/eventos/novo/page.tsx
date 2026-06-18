@@ -10,9 +10,8 @@ export default function NewEventPage() {
   const { addEvent } = useEvents();
 
   const handleSubmit = async (data: EventFormData) => {
-    const { slug: _slug, ...rest } = data;
     try {
-      await addEvent(rest);
+      await addEvent(data);
       router.push("/admin/eventos");
     } catch {
       alert("Não foi possível criar o evento. Verifique se a API está online.");

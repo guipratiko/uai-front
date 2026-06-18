@@ -2,62 +2,35 @@
 
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import type { Event, TicketTier } from "@/types";
+import type { TicketTier } from "@/types";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { createEmptyTicket } from "@/context/EventsContext";
+import { AdminImageField } from "@/components/admin/AdminImageField";
+import {
+  createEmptyTicket,
+  emptyEventForm,
+  eventToFormData,
+  type EventFormData,
+} from "@/lib/event-form";
 
-export type EventFormData = Omit<Event, "id" | "slug"> & { slug?: string };
+export type { EventFormData };
+export { emptyEventForm, eventToFormData as eventToForm };
 
-const defaultForm: EventFormData = {
-  title: "",
-  subtitle: "",
-  category: "Música",
-  date: "",
-  time: "20:00",
-  venue: "",
-  address: "",
-  city: "Goiânia",
-  state: "GO",
-  image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
-  bannerImage:
-    "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1600&q=80",
-  description: "",
-  highlights: [""],
-  organizer: "Uai Produções",
-  ageRating: "Livre",
-  mapEmbedUrl:
-    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.0!2d-49.2647!3d-16.6869!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDQxJzEzLjAiUyA0OcKwMTUnMzIuOSJX!5e0!3m2!1spt-BR!2sbr!4v1",
-  coordinates: { lat: -16.6869, lng: -49.2647 },
-  featured: false,
-  buyerFeePercent: null,
-  platformFeePercent: null,
-  allowTransfer: true,
-  tickets: [createEmptyTicket()],
-};
-
-export function emptyEventForm(): EventFormData {
-  return JSON.parse(JSON.stringify(defaultForm)) as EventFormData;
-}
-
-export function eventToForm(event: Event): EventFormData {
-  return {
-    ...event,
-    highlights: event.highlights.length ? [...event.highlights] : [""],
-    tickets: event.tickets.map((t) => ({ ...t })),
-  };
-}
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 
 export function EventForm({
   initial,
   onSubmit,
   submitLabel,
+  isEdit,
 }: {
   initial: EventFormData;
   onSubmit: (data: EventFormData) => void;
   submitLabel: string;
+  isEdit?: boolean;
 }) {
   const [form, setForm] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
 
   function update<K extends keyof EventFormData>(key: K, value: EventFormData[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -70,13 +43,39 @@ export function EventForm({
     }));
   }
 
+  const validateImages = () => {
+    const checkFile = (file: File | null, label: string) => {
+      if (file && file.size > MAX_IMAGE_BYTES) {
+        throw new Error(`${label}: arquivo maior que 3 MB`);
+      }
+    };
+    checkFile(form.imageFile, "Imagem card");
+    checkFile(form.bannerFile, "Banner");
+
+    const hasCard =
+      (form.cardMode === "upload" && (form.imageFile || (isEdit && form.image))) ||
+      (form.cardMode === "url" && form.imageUrl.trim());
+    const hasBanner =
+      (form.bannerMode === "upload" && (form.bannerFile || (isEdit && form.bannerImage))) ||
+      (form.bannerMode === "url" && form.bannerImageUrl.trim());
+
+    if (!hasCard) throw new Error("Informe a imagem card (upload ou URL)");
+    if (!hasBanner) throw new Error("Informe o banner (upload ou URL)");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...form,
-      highlights: form.highlights.filter((h) => h.trim()),
-      tickets: form.tickets.filter((t) => t.name.trim()),
-    });
+    setError(null);
+    try {
+      validateImages();
+      onSubmit({
+        ...form,
+        highlights: form.highlights.filter((h) => h.trim()),
+        tickets: form.tickets.filter((t) => t.name.trim()),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verifique as imagens");
+    }
   };
 
   return (
@@ -221,13 +220,36 @@ export function EventForm({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-slate-900">Imagens (URL)</h2>
-        <div className="mt-4 grid gap-4">
-          <Input label="Imagem card" value={form.image} onChange={(e) => update("image", e.target.value)} />
-          <Input
+        <h2 className="text-lg font-bold text-slate-900">Imagens</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Envie arquivos ou use URL externa (ex.: OnlyFlow). Máximo 3 MB por arquivo.
+        </p>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <AdminImageField
+            label="Imagem card"
+            hint="Listagem e cards do site (proporção paisagem recomendada)"
+            mode={form.cardMode}
+            onModeChange={(cardMode) => update("cardMode", cardMode)}
+            url={form.imageUrl}
+            onUrlChange={(imageUrl) => update("imageUrl", imageUrl)}
+            file={form.imageFile}
+            onFileChange={(imageFile) => update("imageFile", imageFile)}
+            previewUrl={isEdit && form.cardMode === "upload" ? form.image : undefined}
+            required={!isEdit}
+            maxMb={3}
+          />
+          <AdminImageField
             label="Banner"
-            value={form.bannerImage}
-            onChange={(e) => update("bannerImage", e.target.value)}
+            hint="Topo da página do evento (paisagem, maior resolução)"
+            mode={form.bannerMode}
+            onModeChange={(bannerMode) => update("bannerMode", bannerMode)}
+            url={form.bannerImageUrl}
+            onUrlChange={(bannerImageUrl) => update("bannerImageUrl", bannerImageUrl)}
+            file={form.bannerFile}
+            onFileChange={(bannerFile) => update("bannerFile", bannerFile)}
+            previewUrl={isEdit && form.bannerMode === "upload" ? form.bannerImage : undefined}
+            required={!isEdit}
+            maxMb={3}
           />
         </div>
       </section>
@@ -321,6 +343,10 @@ export function EventForm({
           ))}
         </div>
       </section>
+
+      {error && (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
+      )}
 
       <div className="flex justify-end gap-3">
         <Button type="submit" size="lg">
