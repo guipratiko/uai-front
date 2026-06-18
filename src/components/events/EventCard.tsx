@@ -2,13 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Calendar, MapPin } from "lucide-react";
 import type { Event } from "@/types";
-import { formatCurrency, formatShortDate } from "@/lib/format";
+import { formatShortDate } from "@/lib/format";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
 export function EventCard({ event }: { event: Event }) {
-  const minPrice = Math.min(...event.tickets.map((t) => t.price));
-
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
       <div className="relative aspect-[16/10] overflow-hidden">
@@ -45,15 +43,9 @@ export function EventCard({ event }: { event: Event }) {
             {event.city}, {event.state}
           </span>
         </div>
-        <div className="mt-auto flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-end sm:justify-between sm:pt-4">
-          <div className="min-w-0">
-            <p className="text-[10px] text-slate-500 sm:text-xs">A partir de</p>
-            <p className="text-base font-bold leading-tight text-brand-700 sm:text-lg">
-              {formatCurrency(minPrice)}
-            </p>
-          </div>
-          <Link href={`/eventos/${event.slug}`} className="shrink-0">
-            <Button size="sm" className="w-full text-xs sm:w-auto sm:text-sm">
+        <div className="mt-auto border-t border-slate-100 pt-3 sm:pt-4">
+          <Link href={`/eventos/${event.slug}`} className="block">
+            <Button size="sm" className="w-full text-xs sm:text-sm">
               Ver ingressos
             </Button>
           </Link>
