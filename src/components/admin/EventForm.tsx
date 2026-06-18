@@ -12,6 +12,7 @@ import {
   eventToFormData,
   type EventFormData,
 } from "@/lib/event-form";
+import { applyMapEmbed, buildMapEmbedUrl, validateCoordinates } from "@/lib/map-embed";
 
 export type { EventFormData };
 export { emptyEventForm, eventToFormData as eventToForm };
@@ -43,6 +44,17 @@ export function EventForm({
     }));
   }
 
+  function updateCoordinates(lat: number, lng: number) {
+    setForm((f) => {
+      const coordinates = { lat, lng };
+      const mapEmbedUrl =
+        Number.isFinite(lat) && Number.isFinite(lng)
+          ? buildMapEmbedUrl(lat, lng)
+          : f.mapEmbedUrl;
+      return { ...f, coordinates, mapEmbedUrl };
+    });
+  }
+
   const validateImages = () => {
     const checkFile = (file: File | null, label: string) => {
       if (file && file.size > MAX_IMAGE_BYTES) {
@@ -61,6 +73,9 @@ export function EventForm({
 
     if (!hasCard) throw new Error("Informe a imagem card (upload ou URL)");
     if (!hasBanner) throw new Error("Informe o banner (upload ou URL)");
+
+    const coordError = validateCoordinates(form.coordinates);
+    if (coordError) throw new Error(coordError);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,13 +83,13 @@ export function EventForm({
     setError(null);
     try {
       validateImages();
-      onSubmit({
+      onSubmit(applyMapEmbed({
         ...form,
         highlights: form.highlights.filter((h) => h.trim()),
         tickets: form.tickets.filter((t) => t.name.trim()),
-      });
+      }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verifique as imagens");
+      setError(err instanceof Error ? err.message : "Verifique os dados");
     }
   };
 
@@ -211,12 +226,54 @@ export function EventForm({
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-slate-900">Local</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          No Google Maps, clique com o botão direito no local → &quot;Copiar coordenadas&quot; para
+          preencher latitude e longitude.
+        </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Input label="Local" value={form.venue} onChange={(e) => update("venue", e.target.value)} />
           <Input label="Endereço" value={form.address} onChange={(e) => update("address", e.target.value)} />
           <Input label="Cidade" value={form.city} onChange={(e) => update("city", e.target.value)} />
           <Input label="UF" value={form.state} onChange={(e) => update("state", e.target.value)} maxLength={2} />
+          <Input
+            label="Latitude"
+            type="number"
+            step="any"
+            min={-90}
+            max={90}
+            placeholder="Ex.: -16.6869"
+            value={Number.isFinite(form.coordinates.lat) ? form.coordinates.lat : ""}
+            onChange={(e) => {
+              const lat = e.target.value === "" ? Number.NaN : Number(e.target.value);
+              updateCoordinates(lat, form.coordinates.lng);
+            }}
+            required
+          />
+          <Input
+            label="Longitude"
+            type="number"
+            step="any"
+            min={-180}
+            max={180}
+            placeholder="Ex.: -49.2647"
+            value={Number.isFinite(form.coordinates.lng) ? form.coordinates.lng : ""}
+            onChange={(e) => {
+              const lng = e.target.value === "" ? Number.NaN : Number(e.target.value);
+              updateCoordinates(form.coordinates.lat, lng);
+            }}
+            required
+          />
         </div>
+        {Number.isFinite(form.coordinates.lat) && Number.isFinite(form.coordinates.lng) && (
+          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+            <iframe
+              title="Prévia do mapa"
+              src={buildMapEmbedUrl(form.coordinates.lat, form.coordinates.lng)}
+              className="aspect-[16/9] w-full border-0"
+              loading="lazy"
+            />
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

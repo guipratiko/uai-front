@@ -109,9 +109,8 @@ export function emptyEventForm(): EventFormData {
     highlights: [""],
     organizer: "Uai Produções",
     ageRating: "Livre",
-    mapEmbedUrl:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.0!2d-49.2647!3d-16.6869!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDQxJzEzLjAiUyA0OcKwMTUnMzIuOSJX!5e0!3m2!1spt-BR!2sbr!4v1",
-    coordinates: { lat: -16.6869, lng: -49.2647 },
+    mapEmbedUrl: "",
+    coordinates: { lat: Number.NaN, lng: Number.NaN },
     featured: false,
     buyerFeePercent: null,
     platformFeePercent: null,
