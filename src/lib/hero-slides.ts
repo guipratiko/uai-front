@@ -1,8 +1,8 @@
 export type HeroSlide = {
   id: string;
-  eventId: string;
-  eventSlug: string;
-  eventTitle: string;
+  eventId: string | null;
+  eventSlug: string | null;
+  eventTitle: string | null;
   title: string;
   subtitle: string;
   imageDesktop: string;
@@ -52,7 +52,7 @@ export function heroSlideToForm(slide: HeroSlide): HeroSlideFormData {
   const desktopIsUrl = slide.imageDesktop.startsWith("http");
   const mobileIsUrl = slide.imageMobile.startsWith("http");
   return {
-    eventId: slide.eventId,
+    eventId: slide.eventId ?? "",
     title: slide.title,
     subtitle: slide.subtitle,
     displayDurationMs: slide.displayDurationMs,

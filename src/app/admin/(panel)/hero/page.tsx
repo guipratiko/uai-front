@@ -74,7 +74,8 @@ export default function AdminHeroPage() {
                 <p className="font-semibold text-slate-900">{slide.title}</p>
                 <p className="truncate text-sm text-slate-500">{slide.subtitle}</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  {slide.eventTitle} · {slide.displayDurationMs / 1000}s · ordem {slide.sortOrder}
+                  {slide.eventTitle ?? "Sem evento vinculado"} · {slide.displayDurationMs / 1000}s · ordem{" "}
+                  {slide.sortOrder}
                 </p>
                 {!slide.active && (
                   <span className="mt-2 inline-block rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800">

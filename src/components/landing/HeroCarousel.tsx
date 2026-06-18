@@ -40,32 +40,43 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const slide = slides[index];
   if (!slide) return null;
 
-  const eventHref = `/eventos/${slide.eventSlug}`;
+  const eventHref = slide.eventSlug ? `/eventos/${slide.eventSlug}` : null;
+
+  const imageBlock = (
+    <div
+      className={cn(
+        "absolute inset-0 transition-opacity duration-500",
+        visible ? "opacity-100" : "opacity-0",
+      )}
+    >
+      <picture className="block h-full w-full">
+        <source media="(min-width: 768px)" srcSet={slide.imageDesktopUrl} />
+        <img
+          src={slide.imageMobileUrl}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      </picture>
+    </div>
+  );
 
   return (
     <>
-      <Link
-        href={eventHref}
-        className="absolute inset-0 z-0 block"
-        aria-label={`Ver evento ${slide.eventTitle}`}
-      >
-        <div
-          className={cn(
-            "absolute inset-0 transition-opacity duration-500",
-            visible ? "opacity-100" : "opacity-0",
-          )}
+      {eventHref ? (
+        <Link
+          href={eventHref}
+          className="absolute inset-0 z-0 block"
+          aria-label={`Ver evento ${slide.eventTitle}`}
         >
-          <picture className="block h-full w-full">
-            <source media="(min-width: 768px)" srcSet={slide.imageDesktopUrl} />
-            <img
-              src={slide.imageMobileUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          </picture>
+          {imageBlock}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
+        </Link>
+      ) : (
+        <div className="absolute inset-0 z-0">
+          {imageBlock}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
-      </Link>
+      )}
 
       <div className="relative z-10 mx-auto flex min-h-[inherit] max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 sm:pb-28 sm:pt-28 lg:px-8 lg:pb-32 lg:pt-32">
         <div
@@ -78,14 +89,16 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             {slide.title}
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl">{slide.subtitle}</p>
-          <div className="mt-10">
-            <Link href={eventHref}>
-              <Button size="lg" variant="secondary">
-                Ver evento
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
+          {eventHref && (
+            <div className="mt-10">
+              <Link href={eventHref}>
+                <Button size="lg" variant="secondary">
+                  Ver evento
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          )}
           {slides.length > 1 && (
             <div className="mt-8 flex gap-2" aria-hidden>
               {slides.map((s, i) => (

@@ -117,10 +117,6 @@ export function HeroSlideForm({
     e.preventDefault();
     setError(null);
 
-    if (!form.eventId) {
-      setError("Selecione um evento");
-      return;
-    }
     if (!form.title.trim()) {
       setError("Título é obrigatório");
       return;
@@ -157,23 +153,24 @@ export function HeroSlideForm({
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-6">
       <div>
         <label htmlFor="hero-event" className="block text-sm font-medium text-slate-700">
-          Evento vinculado
+          Evento vinculado <span className="font-normal text-slate-400">(opcional)</span>
         </label>
         <select
           id="hero-event"
           value={form.eventId}
           onChange={(e) => setForm({ ...form, eventId: e.target.value })}
-          required
           className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
         >
-          <option value="">Selecione...</option>
+          <option value="">Nenhum — banner informativo</option>
           {events.map((ev) => (
             <option key={ev.id} value={ev.id}>
               {ev.title}
             </option>
           ))}
         </select>
-        <p className="mt-1 text-xs text-slate-500">O clique no banner leva para a página deste evento.</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Se vincular um evento, o clique no banner leva para a página dele.
+        </p>
       </div>
 
       <Input
