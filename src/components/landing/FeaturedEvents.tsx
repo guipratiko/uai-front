@@ -12,7 +12,7 @@ export function FeaturedEvents() {
             Eventos imperdíveis
           </h2>
           <p className="mt-4 text-slate-600">
-            Os melhores eventos de Goiás com ingressos disponíveis agora.
+            Eventos em destaque com ingressos disponíveis agora.
           </p>
         </div>
         <EventsGrid />

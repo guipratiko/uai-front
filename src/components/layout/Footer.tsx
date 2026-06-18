@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AtSign, Mail, MapPin } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { BRAND_TAGLINE } from "@/lib/brand";
 
 const ONLYFLOW_LOGO_PATH = "/img/OnlyFlow-logo.png";
 
@@ -13,9 +14,8 @@ export function Footer() {
           <div className="md:col-span-2">
             <Logo height={40} />
             <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-400">
-              A plataforma goiana de venda de ingressos. Eventos, checkout seguro e
-              ingressos digitais com QR Code, com o jeitinho uai de fazer as coisas
-              direito.
+              {BRAND_TAGLINE} Checkout seguro, ingressos digitais com QR Code e suporte
+              dedicado para produtores e público.
             </p>
             <div className="mt-4 space-y-2 text-sm text-slate-500">
               <p className="flex items-start gap-2">

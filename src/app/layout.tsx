@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { AppProviders } from "@/providers/AppProviders";
+import { BRAND_TAGLINE } from "@/lib/brand";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -11,11 +12,11 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Uai Tickets — Ingressos para eventos em Minas",
+    default: BRAND_TAGLINE,
     template: "%s | Uai Tickets",
   },
   description:
-    "Compre ingressos para os melhores eventos de Minas Gerais. Checkout seguro, QR Code e experiência profissional.",
+    "Checkout seguro, ingressos digitais com QR Code e gestão completa para produtores e compradores.",
   icons: {
     icon: "/img/favicon.png",
     shortcut: "/img/favicon.png",

@@ -11,8 +11,8 @@ export function CTABanner() {
             Pronto para viver momentos inesquecíveis?
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-slate-300">
-            Garanta seu lugar nos melhores eventos de Minas. Processo rápido, seguro e
-            sem complicação.
+            Garanta seu lugar nos melhores eventos. Processo rápido, seguro e sem
+            complicação.
           </p>
           <Link href="/#eventos" className="relative mt-8 inline-block">
             <Button size="lg" variant="secondary">
