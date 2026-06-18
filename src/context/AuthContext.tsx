@@ -40,7 +40,14 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 type ApiUser = User & { id?: string; role?: string };
 
-function toUser(u: ApiUser): User {
+function withCacheBust(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const base = url.split("?")[0];
+  return `${base}?v=${Date.now()}`;
+}
+
+function toUser(u: ApiUser, bustAvatar = false): User {
+  const avatarUrl = resolveAssetUrl(u.avatarUrl);
   return {
     fullName: u.fullName,
     email: u.email,
@@ -49,7 +56,7 @@ function toUser(u: ApiUser): User {
     gender: u.gender ?? "unspecified",
     city: u.city ?? "",
     state: u.state ?? "",
-    avatarUrl: resolveAssetUrl(u.avatarUrl),
+    avatarUrl: bustAvatar ? withCacheBust(avatarUrl) : avatarUrl,
   };
 }
 
@@ -170,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const formData = new FormData();
       formData.append("avatar", file);
       const result = await apiFormData<{ user: ApiUser }>("/auth/avatar", formData);
-      setUser(toUser(result.user));
+      setUser(toUser(result.user, true));
       return { ok: true };
     } catch (e) {
       return {
