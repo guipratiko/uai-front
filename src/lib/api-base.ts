@@ -6,10 +6,32 @@ export function getApiBase(): string {
   return api.replace(/\/api\/?$/, "");
 }
 
+function extractUploadPath(url: string): string | null {
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  let pathname = trimmed;
+  if (!trimmed.startsWith("/")) {
+    try {
+      pathname = new URL(trimmed).pathname;
+    } catch {
+      return null;
+    }
+  } else {
+    pathname = trimmed.split("?")[0].split("#")[0];
+  }
+
+  if (!pathname.startsWith("/uploads/")) return null;
+  const filename = pathname.slice(pathname.lastIndexOf("/") + 1);
+  if (!filename || !filename.includes(".")) return null;
+
+  return pathname;
+}
+
 /** Corrige URLs de upload (avatar, hero) vindas da API — inclusive localhost em produção. */
 export function resolveAssetUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  const path = url.match(/(\/uploads\/[^/?#]+)/)?.[1];
-  if (path) return `${getApiBase()}${path}`;
-  return url;
+  const path = extractUploadPath(url);
+  if (!path) return null;
+  return `${getApiBase()}${path}`;
 }

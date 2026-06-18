@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, Trash2, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -21,6 +20,13 @@ export function ProfileAvatar({
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarBroken, setAvatarBroken] = useState(false);
+
+  useEffect(() => {
+    setAvatarBroken(false);
+  }, [user?.avatarUrl]);
+
+  const showAvatar = !!user?.avatarUrl && !avatarBroken;
 
   const dim = size === "lg" ? "h-24 w-24" : "h-20 w-20";
   const iconSize = size === "lg" ? "h-10 w-10" : "h-8 w-8";
@@ -56,13 +62,13 @@ export function ProfileAvatar({
           )}
           aria-label="Alterar foto de perfil"
         >
-          {user?.avatarUrl ? (
-            <Image
-              src={user.avatarUrl}
+          {showAvatar ? (
+            // eslint-disable-next-line @next/next/no-img-element -- avatar externo; evita proxy _next/image
+            <img
+              src={user.avatarUrl!}
               alt={user.fullName}
-              fill
-              className="object-cover"
-              sizes={size === "lg" ? "96px" : "80px"}
+              className="h-full w-full object-cover"
+              onError={() => setAvatarBroken(true)}
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-brand-400">
@@ -97,9 +103,9 @@ export function ProfileAvatar({
             disabled={loading}
             className="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
           >
-            {user?.avatarUrl ? "Trocar foto" : "Adicionar foto"}
+            {user?.avatarUrl && !avatarBroken ? "Trocar foto" : "Adicionar foto"}
           </button>
-          {user?.avatarUrl && (
+          {user?.avatarUrl && !avatarBroken && (
             <>
               <span className="text-slate-300">·</span>
               <button
