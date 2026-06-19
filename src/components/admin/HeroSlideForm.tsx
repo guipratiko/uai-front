@@ -117,9 +117,17 @@ export function HeroSlideForm({
     e.preventDefault();
     setError(null);
 
-    if (!form.title.trim()) {
-      setError("Título é obrigatório");
-      return;
+    if (!form.eventId && form.externalLink.trim()) {
+      try {
+        const url = new URL(form.externalLink.trim());
+        if (!["http:", "https:"].includes(url.protocol)) {
+          setError("Link externo: use uma URL http ou https");
+          return;
+        }
+      } catch {
+        setError("Link externo inválido");
+        return;
+      }
     }
 
     const hasDesktop =
@@ -158,7 +166,13 @@ export function HeroSlideForm({
         <select
           id="hero-event"
           value={form.eventId}
-          onChange={(e) => setForm({ ...form, eventId: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              eventId: e.target.value,
+              externalLink: e.target.value ? "" : form.externalLink,
+            })
+          }
           className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
         >
           <option value="">Nenhum — banner informativo</option>
@@ -173,16 +187,27 @@ export function HeroSlideForm({
         </p>
       </div>
 
+      {!form.eventId && (
+        <Input
+          label="Link externo"
+          type="url"
+          value={form.externalLink}
+          onChange={(e) => setForm({ ...form, externalLink: e.target.value })}
+          placeholder="https://..."
+          hint="Opcional. Abre em nova aba quando o banner for clicado."
+        />
+      )}
+
       <Input
         label="Título"
         value={form.title}
         onChange={(e) => setForm({ ...form, title: e.target.value })}
-        required
+        hint="Opcional. Sem título e subtítulo, o banner exibe só a imagem (sem filtro escuro)."
       />
 
       <div className="space-y-1.5">
         <label htmlFor="hero-subtitle" className="block text-sm font-medium text-slate-700">
-          Subtítulo
+          Subtítulo <span className="font-normal text-slate-400">(opcional)</span>
         </label>
         <textarea
           id="hero-subtitle"

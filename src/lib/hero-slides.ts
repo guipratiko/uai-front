@@ -3,6 +3,7 @@ export type HeroSlide = {
   eventId: string | null;
   eventSlug: string | null;
   eventTitle: string | null;
+  externalLink: string | null;
   title: string;
   subtitle: string;
   imageDesktop: string;
@@ -18,6 +19,7 @@ export type HeroSlide = {
 
 export type HeroSlideFormData = {
   eventId: string;
+  externalLink: string;
   title: string;
   subtitle: string;
   displayDurationMs: number;
@@ -31,9 +33,24 @@ export type HeroSlideFormData = {
   imageMobileFile: File | null;
 };
 
+export function heroSlideHasText(slide: Pick<HeroSlide, "title" | "subtitle">): boolean {
+  return !!(slide.title?.trim() || slide.subtitle?.trim());
+}
+
+export function heroSlideHref(slide: Pick<HeroSlide, "eventSlug" | "externalLink">): string | null {
+  if (slide.eventSlug) return `/eventos/${slide.eventSlug}`;
+  if (slide.externalLink?.trim()) return slide.externalLink.trim();
+  return null;
+}
+
+export function heroSlideIsExternal(slide: Pick<HeroSlide, "eventSlug" | "externalLink">): boolean {
+  return !slide.eventSlug && !!slide.externalLink?.trim();
+}
+
 export function emptyHeroSlideForm(): HeroSlideFormData {
   return {
     eventId: "",
+    externalLink: "",
     title: "",
     subtitle: "",
     displayDurationMs: 4000,
@@ -53,6 +70,7 @@ export function heroSlideToForm(slide: HeroSlide): HeroSlideFormData {
   const mobileIsUrl = slide.imageMobile.startsWith("http");
   return {
     eventId: slide.eventId ?? "",
+    externalLink: slide.externalLink ?? "",
     title: slide.title,
     subtitle: slide.subtitle,
     displayDurationMs: slide.displayDurationMs,
@@ -70,6 +88,11 @@ export function heroSlideToForm(slide: HeroSlide): HeroSlideFormData {
 export function buildHeroSlideFormData(form: HeroSlideFormData): FormData {
   const fd = new FormData();
   fd.append("eventId", form.eventId);
+  if (!form.eventId && form.externalLink.trim()) {
+    fd.append("externalLink", form.externalLink.trim());
+  } else {
+    fd.append("externalLink", "");
+  }
   fd.append("title", form.title);
   fd.append("subtitle", form.subtitle);
   fd.append("displayDurationMs", String(form.displayDurationMs));

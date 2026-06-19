@@ -71,11 +71,16 @@ export default function AdminHeroPage() {
                 className="h-20 w-32 shrink-0 rounded-lg object-cover"
               />
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900">{slide.title}</p>
-                <p className="truncate text-sm text-slate-500">{slide.subtitle}</p>
+                <p className="font-semibold text-slate-900">
+                  {slide.title.trim() || "Banner sem título"}
+                </p>
+                {slide.subtitle.trim() && (
+                  <p className="truncate text-sm text-slate-500">{slide.subtitle}</p>
+                )}
                 <p className="mt-1 text-xs text-slate-400">
-                  {slide.eventTitle ?? "Sem evento vinculado"} · {slide.displayDurationMs / 1000}s · ordem{" "}
-                  {slide.sortOrder}
+                  {slide.eventTitle ??
+                    (slide.externalLink ? "Link externo" : "Sem destino")}{" "}
+                  · {slide.displayDurationMs / 1000}s · ordem {slide.sortOrder}
                 </p>
                 {!slide.active && (
                   <span className="mt-2 inline-block rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
@@ -93,7 +98,7 @@ export default function AdminHeroPage() {
                   variant="outline"
                   size="sm"
                   className="text-red-600 hover:bg-red-50"
-                  onClick={() => handleDelete(slide.id, slide.title)}
+                  onClick={() => handleDelete(slide.id, slide.title.trim() || "Banner")}
                 >
                   Excluir
                 </Button>
