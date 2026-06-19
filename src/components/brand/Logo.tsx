@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export const LOGO_PATH = "/img/AGENTS.png";
+export const LOGO_PATH = "/img/logo.png";
 
 type LogoProps = {
   className?: string;
@@ -21,7 +21,7 @@ export function Logo({
     <Image
       src={LOGO_PATH}
       alt="Uai Tickets"
-      width={Math.round(height * 3.2)}
+      width={Math.round(height * 4.2)}
       height={height}
       className={cn("h-auto w-auto object-contain", className)}
       style={{ height, width: "auto" }}
