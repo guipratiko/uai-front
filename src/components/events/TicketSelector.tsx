@@ -103,9 +103,6 @@ export function TicketSelector({ event }: { event: Event }) {
                 size="sm"
               />
             </div>
-            <p className="mt-2 text-xs text-slate-400">
-              {ticket.available.toLocaleString("pt-BR")} disponíveis
-            </p>
           </div>
           );
         })}
